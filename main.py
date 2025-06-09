@@ -35,8 +35,6 @@ class Physics:
         self.wind = wind
         self.gravitation = gravitation
     
-    def randomiseWind(self,windStrength: float):
-        self.wind = random.uniform(-windStrength, windStrength)
     
     def applyWind(self, symbol:Symbol):
         symbol.velocityX += self.wind
@@ -50,8 +48,10 @@ class Physics:
                 symbol.velocityX += (self.wind *2.5)
                 symbol.velocityY += (self.gravitation/10)
                     
-        symbol.x += math.ceil(symbol.velocityX)
-        symbol.y += math.ceil(symbol.velocityY)
+        #symbol.x += math.ceil(symbol.velocityX)
+        symbol.x += int(max(-1, min(symbol.velocityX, 1)))
+
+        symbol.y += int(max(-1.4, min(symbol.velocityY, 1.4)))
         
 
     def applyTemperatur(self, symbol: Symbol):
@@ -73,6 +73,7 @@ class Physics:
 
 class MainLoop:
     def __init__(self,fps:int,stdscr):
+
         self.debug = True
         self.config = toml.load("config.toml")
         self.stdscr = stdscr
@@ -92,11 +93,15 @@ class MainLoop:
 
         self.physics = Physics(self.config["Physics"]["wind"], self.config["Physics"]["gravitation"])
         self.thundertimer = 0
-        self.raindropCount = 13
+        self.raindropCount = self.config["MainLoop"]["raindropCount"]
+        self.debugstring = f" Drops: {len(self.symbolList)} | FPS: {self.fps}"
 
         self.height, self.width = stdscr.getmaxyx()
     def inbound(self):
-       self.symbolList = [s for s in self.symbolList if 0 <= s.x < self.width and 0 <= s.y < self.height]
+        for elements in self.symbolList:
+            if elements.x > self.width:
+                elements.x = elements.x % self.width
+            self.symbolList = [s for s in self.symbolList if 0 <= s.y < self.height]
     
     def spawnDrops(self,):
         for i in range(self.raindropCount):
@@ -144,11 +149,10 @@ class MainLoop:
     def draw(self):
 
 
-            
             self.stdscr.erase()
             if self.debug == True:
-                footer = f" Drops: {len(self.symbolList)} | FPS: {self.fps}"
-                self.stdscr.addstr(self.height-1, 0, footer[:self.width-1], curses.A_REVERSE)
+                self.debugstring.join("test")
+                self.stdscr.addstr(self.height-1, 0, self.debugstring[:self.width-1], curses.A_REVERSE)
             for s in self.symbolList:
                 y, x = int(s.y), int(s.x)
                 match s.type:
@@ -165,6 +169,7 @@ class MainLoop:
                     pass
 
     def handle_input(self):
+            
             key = self.stdscr.getch()
             match key:
                 case 116:
@@ -172,7 +177,7 @@ class MainLoop:
                     curses.init_pair(1, curses.COLOR_BLUE,   curses.COLOR_BLACK)  
                     curses.init_pair(2, curses.COLOR_WHITE,  curses.COLOR_BLACK)  
                     curses.init_pair(3, curses.COLOR_YELLOW, curses.COLOR_BLACK)
-    
+                    
                     self.stdscr.bkgd(' ', curses.color_pair(1))
                     
                     symbols = ['█', '▓', '░' ]
@@ -187,9 +192,9 @@ class MainLoop:
                         
                         y+=1
                 case 43:
-                    self.physics.gravitation += 0.3
+                    self.physics.gravitation += 0.05
                 case 45:
-                    self.physics.gravitation -= 0.3
+                    self.physics.gravitation -= 0.05
  
 
             return key
@@ -198,19 +203,19 @@ class MainLoop:
 
     def loop(self):
         while(True):
+            t = time.time()
             if not self.handle_input():
-                break
+                 break
             self.thunderclear()
             self.spawnDrops()
 
-            self.physics.randomiseWind(0.3)
             for s in self.symbolList:
                 self.physics.applyPhysics(s)
             self.inbound()
 
-
             self.draw()
-            time.sleep(1/self.fps)
+            time.sleep(max(0,(1/self.fps)- (time.time()-t)))
+            self.debugstring = f"{str(round(1/(time.time()- t)))} wind: {str(round(self.physics.wind, 2))} gravitation: {str(round(self.physics.gravitation, 2))} Symbole: {len(self.symbolList)}"
 def start_engine(stdscr):
     engine = MainLoop(fps=30, stdscr=stdscr)
     engine.loop()

@@ -1,11 +1,11 @@
 [Physics]
-wind = 0.0
-gravitation = 0.15
+wind = 0.01
+gravitation = 0.40
 
 [MainLoop]
 fps = 30
 thundertimer = 0
-raindropCount = 13
+raindropCount = 12
 
 
 
