@@ -12,7 +12,7 @@ particleType = Enum("symbolType", ["Lightning", "Rain", "Snow"])
 
 class Particle:
 
-    def __init__(self, x:int, y:int, symbol:str, type:particleType, temperatur:int):
+    def __init__(self, x:float, y:float, symbol:str, type:particleType, temperatur:int):
         self.x = x
         self.y = y
         self.velocityX = 0.0
@@ -33,20 +33,17 @@ class Physics:
         self.gravitation = gravitation
     
     
-    def applyWind(self, symbol:Particle):
-        symbol.velocityX += self.wind
-    
-    def applyGravitation(self, symbol:Particle):
+    def applyGravitation(self, symbol:Particle,fps):
         match symbol.particleType:
             case particleType.Rain:        
-                symbol.velocityX += self.wind
+                #symbol.velocityX += self.wind
                 symbol.velocityY += self.gravitation
             case particleType.Snow:
                 symbol.velocityX += (self.wind *2.5)
                 symbol.velocityY += (self.gravitation/10)
                     
-        symbol.x += int(max(-1, min(symbol.velocityX, 1)))
-        symbol.y += int(max(-1.4, min(symbol.velocityY, 1.4)))
+        symbol.x += min(symbol.velocityX, 30/fps)
+        symbol.y += min(symbol.velocityY, 30/fps)
         
 
     def applyTemperatur(self, symbol: Particle):
@@ -54,14 +51,13 @@ class Physics:
             symbol.symbol ='❉'
             symbol.particleType = particleType.Snow
 
-    def applyPhysics(self, symbol:Particle):
+    def applyPhysics(self, symbol:Particle, fps):
         match symbol.particleType:
             case particleType.Lightning:
                 pass
             case default:
                 self.applyTemperatur(symbol)
-                self.applyWind(symbol)
-                self.applyGravitation(symbol)
+                self.applyGravitation(symbol, fps)
                 
 
 
@@ -87,7 +83,7 @@ class MainLoop:
 
         self.physics = Physics(self.config["Physics"]["wind"], self.config["Physics"]["gravitation"])
         self.thundertimer = 0
-        self.raindropCount = self.config["MainLoop"]["raindropCount"]
+        self.raindropCount = self.config["MainLoop"]["raindropCount"] * (30/self.fps)
         self.debugstring = f" Drops: {len(self.symbolList)} | FPS: {self.fps}"
 
         self.height, self.width = stdscr.getmaxyx()
@@ -101,7 +97,7 @@ class MainLoop:
         self.symbolList = new_symbol_list
     
     def spawnDrops(self,):
-        for i in range(self.raindropCount):
+        for i in range(int(self.raindropCount)):
             x = random.randint(0, self.width - 1)
             char = random.choices(['|', '¦','╿'], [5,5,1])[0]
             symbol = Particle(x, 0, char, particleType.Rain, random.randint(0,1))
@@ -208,7 +204,7 @@ class MainLoop:
             self.spawnDrops()
 
             for s in self.symbolList:
-                self.physics.applyPhysics(s)
+                self.physics.applyPhysics(s, self.fps)
             self.inbound()
 
             self.draw()
