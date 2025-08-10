@@ -1,5 +1,5 @@
 # tui-weather-engine
-![](https://github.com/NebelToast/tui-weather-engine/blob/main/showcase.mp4)
+
 
 
 A simple Python script that displays beautiful, aesthetic weather simulations right in your terminal. This project focuses more on creating a visually pleasing experience than on an accurate meteorological depiction.
