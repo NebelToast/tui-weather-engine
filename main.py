@@ -21,7 +21,7 @@ class Config:
         self.raindropCount = Values["MainLoop"]["raindropCount"]
         self.windStrength = Values["Wind"]["strength"]
         self.windVariation = Values["Wind"]["variation"]
-
+        self.clouds = Values["MainLoop"]["clouds"]
         self.gravitation = Values["Physics"]["gravitation"]
         self.temperatur = Values["Physics"]["temperatur"]
 
@@ -190,7 +190,7 @@ class MainLoop:
             for y_offset, line in enumerate(f):
                 for x_offset, symbol in enumerate(line.rstrip('\n')):
                             #if symbol != ' ' and symbol != '⠀':
-                            parsed_art.append((x_offset, y_offset, symbol))
+                        parsed_art.append((x_offset, y_offset, symbol))
 
         return parsed_art
     def special(self, fileName, y, x):
@@ -306,7 +306,8 @@ class MainLoop:
             self.inbound()
 
             self.draw()
-            self.clouds()
+            if self.config.clouds:
+                self.clouds()
             self.stdscr.refresh()
             curses.delay_output(int(max(0, (1 / self.fps) - (time.time() - t)) * 1000))
             self.debugstring = f"{str(round(1/(time.time()- t)))} frametime: {str(round(time.time()- t, 3))} wind: {str(round(self.physics.wind.strength, 1))} gravitation: {str(round(self.physics.gravitation, 2))} Symbole: {len(self.symbolList)} Temperatur: {self.physics.temperatur} MaxSpeed: {round(self.physics.maxSpeed, 3)}"

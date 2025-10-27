@@ -4,6 +4,7 @@ thundertimer = 0
 raindropCount = 13
 maxSpeed = 0.5
 maxParticles = 1400
+clouds = false
 
 [Physics]
 gravitation = 0.1
