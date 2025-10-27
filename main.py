@@ -3,6 +3,7 @@ import random
 from enum import Enum
 import curses
 import toml
+import math
 
 particleType = Enum("symbolType", ["Lightning", "Rain", "Snow"])
 
@@ -15,10 +16,12 @@ class Config:
         self.fps = Values["MainLoop"]["fps"]
         self.thundertimer = Values["MainLoop"]["thundertimer"]
         self.raindropCount = Values["MainLoop"]["raindropCount"]
+        self.windStrength = Values["Wind"]["strength"]
 
-        self.wind = Values["Physics"]["wind"]
         self.gravitation = Values["Physics"]["gravitation"]
         self.temperatur = Values["Physics"]["temperatur"]
+
+        
         return self
     def saveValues(self):
         data_to_save = {
@@ -28,9 +31,10 @@ class Config:
                 "raindropCount": self.raindropCount,
             },
             "Physics": {
-                "wind": self.wind,
                 "gravitation": self.gravitation,
                 "temperatur": self.temperatur,
+            },"Wind": {
+                "strength": self.windStrength
             }
         }
         
@@ -53,24 +57,30 @@ class Particle:
 
 
 
-
+class Wind:
+    def __init__(self,strength:float):
+        self.strength = strength
 
 
 
 class Physics:
-    def __init__(self, wind:float, gravitation:float, temperatur:int):
+    def __init__(self, wind:Wind, gravitation:float, temperatur:int):
         self.wind = wind
         self.gravitation = gravitation
         self.temperatur = temperatur
+
+    def applyWind(self, symbol:Particle):
+            
+            symbol.velocityX += self.wind.strength
     
-    
-    def applyGravitation(self, symbol:Particle,fps):
+    def applyGravitation(self, symbol:Particle):
         if(symbol.particleType != particleType.Lightning):
-            symbol.velocityX += self.wind
             symbol.velocityY += self.gravitation
-            symbol.x += min(symbol.velocityX, (30/fps)*symbol.windresistance)
-            symbol.y += min(symbol.velocityY, (30/fps)/symbol.windresistance)
-        
+            #symbol.x += min(symbol.velocityX, (30/fps)*symbol.windresistance)
+            #symbol.y += min(symbol.velocityY, (30/fps)/symbol.windresistance)
+            symbol.x += symbol.velocityX
+            symbol.y += min(symbol.velocityY, 0.5)
+
                     
 
 
@@ -86,13 +96,14 @@ class Physics:
             symbol.particleType = particleType.Rain
             
 
-    def applyPhysics(self, symbol:Particle, fps):
+    def applyPhysics(self, symbol:Particle):
         match symbol.particleType:
             case particleType.Lightning:
                 pass
             case default:
+                self.applyWind(symbol)
                 self.applyTemperatur(symbol)
-                self.applyGravitation(symbol, fps)
+                self.applyGravitation(symbol)
                 
 
 
@@ -115,13 +126,13 @@ class MainLoop:
         curses.init_pair(2, curses.COLOR_WHITE,  -1)  # snow
         curses.init_pair(3, curses.COLOR_YELLOW, -1) 
         curses.init_pair(4, curses.COLOR_WHITE, curses.COLOR_BLACK)
+        self.wind = Wind(self.config.windStrength)
 
-        self.physics = Physics(self.config.wind, self.config.gravitation, self.config.temperatur)
+        self.physics = Physics(self.wind, self.config.gravitation, self.config.temperatur)
         self.thundertimer = 0
-        self.raindropCount = max(1,self.config.raindropCount * (30/self.fps))
-        self.debugstring = f" Drops: {len(self.symbolList)} | FPS: {self.fps}"
+        self.raindropCount = self.config.raindropCount
+        self.debugstring = f" "
 
-        self.height, self.width = stdscr.getmaxyx()
     def inbound(self):
         new_symbol_list = []
         for element in self.symbolList:
@@ -184,12 +195,14 @@ class MainLoop:
                 except curses.error:
                     pass
 
+
+
     def handle_input(self):
             try:
                 key = self.stdscr.getkey()
             except:
                 return None
-            
+
             match key:
                 case 't':
                     curses.init_pair(1, curses.COLOR_BLUE, curses.COLOR_BLACK)
@@ -202,7 +215,7 @@ class MainLoop:
                     symbols = ['█', '▓', '░' ]
                     y = 0
                     x = random.randint(0, self.width)
-                    self.thundertimer = 18* (self.fps/30)
+                    self.thundertimer = 18
 
 
 
@@ -215,19 +228,19 @@ class MainLoop:
                 case '-':
                     self.physics.gravitation -= 0.05
                 case 'e':
-                    self.physics.wind += 0.0005
+                    self.physics.wind.strength += 0.005
                 case 'q':
-                    self.physics.wind -= 0.0005
+                    self.physics.wind.strength -= 0.005
                 case 'a':
                     self.physics.temperatur +=1
                 case'd':
                     self.physics.temperatur -=1
                 case 'r':
                     self.physics.gravitation = self.config.gravitation
-                    self.physics.wind = self.config.wind
+                    self.physics.wind.strength = self.config.windStrength
                 case 's':
                     self.config.gravitation = self.physics.gravitation
-                    self.config.wind = self.physics.wind
+                    self.config.windStrength = self.physics.wind.strength
                     self.config.temperatur = self.physics.temperatur
                     self.config.saveValues()
 
@@ -244,13 +257,14 @@ class MainLoop:
             self.spawnDrops()
 
             for s in self.symbolList:
-                self.physics.applyPhysics(s, self.fps)
+                self.physics.applyPhysics(s)
             self.inbound()
 
             self.draw()
-
+            self.stdscr.refresh()
+            #self.stdscr.getch()
             curses.delay_output(int(max(0, (1 / self.fps) - (time.time() - t)) * 1000))
-            self.debugstring = f"{str(round(1/(time.time()- t)))} wind: {str(round(self.physics.wind, 5))} gravitation: {str(round(self.physics.gravitation, 2))} Symbole: {len(self.symbolList)} Temperatur: {self.physics.temperatur}"
+            self.debugstring = f"{str(round(1/(time.time()- t)))} frametime: {str(round(time.time()- t, 3))} wind: {str(round(self.physics.wind.strength, 1))} gravitation: {str(round(self.physics.gravitation, 2))} Symbole: {len(self.symbolList)} Temperatur: {self.physics.temperatur}"
             
 def start_engine(stdscr):
     engine = MainLoop(stdscr, "config.toml")

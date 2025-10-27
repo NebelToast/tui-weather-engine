@@ -4,6 +4,8 @@ thundertimer = 0
 raindropCount = 13
 
 [Physics]
-wind = 0.0
-gravitation = 1
+gravitation = 0.1
 temperatur = 3
+
+[Wind]
+strength = 1.734723475976807e-18
