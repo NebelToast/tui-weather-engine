@@ -189,8 +189,8 @@ class MainLoop:
         with open("Overlay/"+filepath, 'r') as f:
             for y_offset, line in enumerate(f):
                 for x_offset, symbol in enumerate(line.rstrip('\n')):
-                            if symbol != ' ' and symbol != '⠀':
-                                parsed_art.append((x_offset, y_offset, symbol))
+                            #if symbol != ' ' and symbol != '⠀':
+                            parsed_art.append((x_offset, y_offset, symbol))
 
         return parsed_art
     def special(self, fileName, y, x):
@@ -280,7 +280,12 @@ class MainLoop:
                 case 'x':
                     exit(0)
             
-
+    def clouds(self):
+        self.special("Cloud.txt",self.width-18,-2)
+        self.special("Cloud.txt",10,-3)
+        self.special("Cloud.txt",45,-1)
+        self.special("Cloud.txt",80,-2)
+        self.special("Cloud.txt",120,-4)
 
     def loop(self):
         while(True):
@@ -301,6 +306,7 @@ class MainLoop:
             self.inbound()
 
             self.draw()
+            self.clouds()
             self.stdscr.refresh()
             curses.delay_output(int(max(0, (1 / self.fps) - (time.time() - t)) * 1000))
             self.debugstring = f"{str(round(1/(time.time()- t)))} frametime: {str(round(time.time()- t, 3))} wind: {str(round(self.physics.wind.strength, 1))} gravitation: {str(round(self.physics.gravitation, 2))} Symbole: {len(self.symbolList)} Temperatur: {self.physics.temperatur} MaxSpeed: {round(self.physics.maxSpeed, 3)}"
