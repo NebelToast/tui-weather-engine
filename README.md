@@ -32,10 +32,10 @@ You can control the simulation in real-time using the following keybinds:
 |Key|Action|
 |---|---|
 |`t`| Call thunder|
-|`+`|Increase wind strength|
-|`-`|Decrease wind strength|
-|`q`|Decrease gravity|
-|`e`|Increase gravity|
+|`q`|Change wind to come from left|
+|`e`|Change wind to come from right|
+|`+`|Decrease gravity|
+|`-`|Increase gravity|
 |`a`|Decrease temperature|
 |`d`|Increase temperature|
 |`r`|Reset settings to match `config.toml`|
