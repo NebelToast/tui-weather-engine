@@ -3,8 +3,9 @@ import random
 from enum import Enum
 import curses
 import toml
+import os
 
-particleType = Enum("symbolType", ["Lightning", "Rain", "Snow"])
+particleType = Enum("symbolType", ["Lightning", "Rain", "Snow", "Overlay"])
 
 
 class Config:
@@ -86,7 +87,7 @@ class Physics:
             symbol.velocityX += current_wind_strength * symbol.windresistance
     
     def applyGravitation(self, symbol:Particle):
-        if(symbol.particleType != particleType.Lightning):
+        if(symbol.particleType != particleType.Lightning and symbol.particleType != particleType.Overlay):
             symbol.velocityY += self.gravitation
             symbol.x += symbol.velocityX
             symbol.y += min(symbol.velocityY , self.maxSpeed/symbol.windresistance)
@@ -119,6 +120,7 @@ class Physics:
 
 class MainLoop:
     def __init__(self,stdscr,configFile:str):
+        
         self.debug = True
         self.config = Config(configFile).loadValues()
         self.stdscr = stdscr
@@ -181,8 +183,26 @@ class MainLoop:
                     curses.init_pair(1, curses.COLOR_BLUE,   -1)  
                     curses.init_pair(2, curses.COLOR_WHITE,  -1)  
                     curses.init_pair(3, curses.COLOR_YELLOW, -1)
+                    
+    def parse_art_file(self,filepath: str) -> list:
+        parsed_art = []
+        with open("Overlay/"+filepath, 'r') as f:
+            for y_offset, line in enumerate(f):
+                for x_offset, symbol in enumerate(line.rstrip('\n')):
+                            if symbol != ' ' and symbol != '⠀':
+                                parsed_art.append((x_offset, y_offset, symbol))
 
+        return parsed_art
+    def special(self, fileName, y, x):
+        piece = self.parse_art_file(fileName)
+        for elements in piece:
+            try:
+                final_y = elements[1] + x 
+                final_x = elements[0] + y
+                self.stdscr.addstr(final_y, final_x, elements[2])
+            except curses.error:
 
+                pass
 
     def draw(self):
             self.stdscr.erase()
