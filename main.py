@@ -264,6 +264,7 @@ class MainLoop:
 
     def loop(self):
         while(True):
+            self.height, self.width = self.stdscr.getmaxyx()
 
             t = time.time()
             self.handle_input()
