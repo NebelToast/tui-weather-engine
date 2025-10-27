@@ -14,6 +14,7 @@ class Config:
     def loadValues(self):
         Values = toml.load(self.configFile)
         self.fps = Values["MainLoop"]["fps"]
+        self.maxSpeed = Values["MainLoop"]["maxSpeed"]
         self.thundertimer = Values["MainLoop"]["thundertimer"]
         self.raindropCount = Values["MainLoop"]["raindropCount"]
         self.windStrength = Values["Wind"]["strength"]
@@ -32,6 +33,7 @@ class Config:
                 "fps": self.fps,
                 "thundertimer": self.thundertimer,
                 "raindropCount": self.raindropCount,
+                "maxSpeed": self.maxSpeed,
             },
             "Physics": {
                 "gravitation": self.gravitation,
@@ -69,10 +71,11 @@ class Wind:
 
 
 class Physics:
-    def __init__(self, wind:Wind, gravitation:float, temperatur:int):
+    def __init__(self, wind:Wind, gravitation:float, temperatur:int, maxSpeed:float):
         self.wind = wind
         self.gravitation = gravitation
         self.temperatur = temperatur
+        self.maxSpeed = maxSpeed
 
     def applyWind(self, symbol:Particle):
             windVariation = random.uniform(-self.wind.variation, self.wind.variation) 
@@ -84,7 +87,7 @@ class Physics:
         if(symbol.particleType != particleType.Lightning):
             symbol.velocityY += self.gravitation
             symbol.x += symbol.velocityX
-            symbol.y += min(symbol.velocityY, 0.5)
+            symbol.y += min(symbol.velocityY , self.maxSpeed/symbol.windresistance)
 
                     
 
@@ -132,7 +135,7 @@ class MainLoop:
         curses.init_pair(4, curses.COLOR_WHITE, curses.COLOR_BLACK)
         self.wind = Wind(self.config.windStrength, self.config.windVariation)
 
-        self.physics = Physics(self.wind, self.config.gravitation, self.config.temperatur)
+        self.physics = Physics(self.wind, self.config.gravitation, self.config.temperatur, self.config.maxSpeed)
         self.thundertimer = 0
         self.raindropCount = int(self.config.raindropCount)
         self.debugstring = f" "
@@ -226,17 +229,21 @@ class MainLoop:
                         
                         y+=1
                 case '+':
-                    self.physics.gravitation += 0.05
+                    self.physics.gravitation += 0.01
                 case '-':
-                    self.physics.gravitation -= 0.05
+                    self.physics.gravitation -= 0.01
                 case 'e':
-                    self.physics.wind.strength += 0.005
+                    self.physics.wind.strength += 0.0025
                 case 'q':
-                    self.physics.wind.strength -= 0.005
+                    self.physics.wind.strength -= 0.0025
                 case 'a':
                     self.physics.temperatur +=1
                 case'd':
                     self.physics.temperatur -=1
+                case 'f':
+                    self.physics.maxSpeed +=0.1
+                case'g':
+                    self.physics.maxSpeed -=0.1
                 case 'r':
                     self.physics.gravitation = self.config.gravitation
                     self.physics.wind.strength = self.config.windStrength
@@ -270,7 +277,7 @@ class MainLoop:
             self.draw()
             self.stdscr.refresh()
             curses.delay_output(int(max(0, (1 / self.fps) - (time.time() - t)) * 1000))
-            self.debugstring = f"{str(round(1/(time.time()- t)))} frametime: {str(round(time.time()- t, 3))} wind: {str(round(self.physics.wind.strength, 1))} gravitation: {str(round(self.physics.gravitation, 2))} Symbole: {len(self.symbolList)} Temperatur: {self.physics.temperatur}"
+            self.debugstring = f"{str(round(1/(time.time()- t)))} frametime: {str(round(time.time()- t, 3))} wind: {str(round(self.physics.wind.strength, 1))} gravitation: {str(round(self.physics.gravitation, 2))} Symbole: {len(self.symbolList)} Temperatur: {self.physics.temperatur} MaxSpeed: {round(self.physics.maxSpeed, 3)}"
             
 def start_engine(stdscr):
     engine = MainLoop(stdscr, "config.toml")
