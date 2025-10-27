@@ -11,6 +11,7 @@ particleType = Enum("symbolType", ["Lightning", "Rain", "Snow"])
 class Config:
     def __init__(self,configFile:str):
         self.configFile = configFile
+
     def loadValues(self):
         Values = toml.load(self.configFile)
         self.fps = Values["MainLoop"]["fps"]
@@ -23,6 +24,7 @@ class Config:
 
         
         return self
+    
     def saveValues(self):
         data_to_save = {
             "MainLoop": {
@@ -47,7 +49,7 @@ class Particle:
 
     def __init__(self, x:float, y:float, symbol:str, type:particleType, temperatur:int):
         self.x = x
-        self.y = y
+        self.y = 0.0
         self.velocityX = 0.0
         self.windresistance = 1
         self.velocityY = 0.0
@@ -70,14 +72,11 @@ class Physics:
         self.temperatur = temperatur
 
     def applyWind(self, symbol:Particle):
-            
             symbol.velocityX += self.wind.strength
     
     def applyGravitation(self, symbol:Particle):
         if(symbol.particleType != particleType.Lightning):
             symbol.velocityY += self.gravitation
-            #symbol.x += min(symbol.velocityX, (30/fps)*symbol.windresistance)
-            #symbol.y += min(symbol.velocityY, (30/fps)/symbol.windresistance)
             symbol.x += symbol.velocityX
             symbol.y += min(symbol.velocityY, 0.5)
 
@@ -122,15 +121,15 @@ class MainLoop:
         
         self.height, self.width = stdscr.getmaxyx()
         curses.use_default_colors()
-        curses.init_pair(1, curses.COLOR_BLUE,   -1)  # rain
-        curses.init_pair(2, curses.COLOR_WHITE,  -1)  # snow
+        curses.init_pair(1, curses.COLOR_BLUE,   -1) 
+        curses.init_pair(2, curses.COLOR_WHITE,  -1)  
         curses.init_pair(3, curses.COLOR_YELLOW, -1) 
         curses.init_pair(4, curses.COLOR_WHITE, curses.COLOR_BLACK)
         self.wind = Wind(self.config.windStrength)
 
         self.physics = Physics(self.wind, self.config.gravitation, self.config.temperatur)
         self.thundertimer = 0
-        self.raindropCount = self.config.raindropCount
+        self.raindropCount = int(self.config.raindropCount)
         self.debugstring = f" "
 
     def inbound(self):
@@ -142,7 +141,7 @@ class MainLoop:
         self.symbolList = new_symbol_list
     
     def spawnDrops(self,):
-        for i in range(int(self.raindropCount)):
+        for i in range(self.raindropCount):
             x = random.randint(0, self.width - 1)
             char = random.choices(['|', '¦','╿'], [5,5,1])[0]
             symbol = Particle(x, 0, char, particleType.Rain, 10)
