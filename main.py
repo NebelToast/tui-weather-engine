@@ -17,9 +17,11 @@ class Config:
         self.thundertimer = Values["MainLoop"]["thundertimer"]
         self.raindropCount = Values["MainLoop"]["raindropCount"]
         self.windStrength = Values["Wind"]["strength"]
+        self.windVariation = Values["Wind"]["variation"]
 
         self.gravitation = Values["Physics"]["gravitation"]
         self.temperatur = Values["Physics"]["temperatur"]
+
 
         
         return self
@@ -35,7 +37,8 @@ class Config:
                 "gravitation": self.gravitation,
                 "temperatur": self.temperatur,
             },"Wind": {
-                "strength": self.windStrength
+                "strength": self.windStrength,
+                "variation": self.windVariation
             }
         }
         
@@ -50,7 +53,7 @@ class Particle:
         self.x = x
         self.y = 0.0
         self.velocityX = 0.0
-        self.windresistance = 1
+        self.windresistance = random.uniform(0.8, 1.2)
         self.velocityY = 0.0
         self.symbol = symbol
         self.particleType = type
@@ -59,8 +62,9 @@ class Particle:
 
 
 class Wind:
-    def __init__(self,strength:float):
+    def __init__(self,strength:float, Variation:float):
         self.strength = strength
+        self.variation = Variation
 
 
 
@@ -71,7 +75,10 @@ class Physics:
         self.temperatur = temperatur
 
     def applyWind(self, symbol:Particle):
-            symbol.velocityX += self.wind.strength
+            windVariation = random.uniform(-self.wind.variation, self.wind.variation) 
+            current_wind_strength = self.wind.strength + windVariation
+            
+            symbol.velocityX += current_wind_strength * symbol.windresistance
     
     def applyGravitation(self, symbol:Particle):
         if(symbol.particleType != particleType.Lightning):
@@ -86,11 +93,10 @@ class Physics:
         symbol.temperatur += self.temperatur
         if symbol.temperatur <=0:
             symbol.symbol ='❉'
-            symbol.windresistance = 2
+            symbol.windresistance = random.uniform(1.6 ,3.2)
             symbol.particleType = particleType.Snow
         elif symbol.temperatur > 0:
             symbol.symbol=random.choices(['|', '¦','╿'], [5,5,1])[0]
-            symbol.windresistance = 1
             symbol.particleType = particleType.Rain
             
 
@@ -124,7 +130,7 @@ class MainLoop:
         curses.init_pair(2, curses.COLOR_WHITE,  -1)  
         curses.init_pair(3, curses.COLOR_YELLOW, -1) 
         curses.init_pair(4, curses.COLOR_WHITE, curses.COLOR_BLACK)
-        self.wind = Wind(self.config.windStrength)
+        self.wind = Wind(self.config.windStrength, self.config.windVariation)
 
         self.physics = Physics(self.wind, self.config.gravitation, self.config.temperatur)
         self.thundertimer = 0
@@ -172,8 +178,6 @@ class MainLoop:
 
 
     def draw(self):
-
-
             self.stdscr.erase()
             if self.debug == True:
                 self.debugstring.join("test")
@@ -255,13 +259,16 @@ class MainLoop:
             self.thunderclear()
             self.spawnDrops()
 
-            for s in self.symbolList:
-                self.physics.applyPhysics(s)
+
+
+
+            for symbols in self.symbolList:
+                self.physics.applyPhysics(symbols)
+
             self.inbound()
 
             self.draw()
             self.stdscr.refresh()
-            #self.stdscr.getch()
             curses.delay_output(int(max(0, (1 / self.fps) - (time.time() - t)) * 1000))
             self.debugstring = f"{str(round(1/(time.time()- t)))} frametime: {str(round(time.time()- t, 3))} wind: {str(round(self.physics.wind.strength, 1))} gravitation: {str(round(self.physics.gravitation, 2))} Symbole: {len(self.symbolList)} Temperatur: {self.physics.temperatur}"
             

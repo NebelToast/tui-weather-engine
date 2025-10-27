@@ -8,4 +8,5 @@ gravitation = 0.1
 temperatur = 3
 
 [Wind]
-strength = 1.734723475976807e-18
+strength = 0.0
+variation = 0.003
