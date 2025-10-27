@@ -3,7 +3,6 @@ import random
 from enum import Enum
 import curses
 import toml
-import math
 
 particleType = Enum("symbolType", ["Lightning", "Rain", "Snow"])
 
@@ -242,7 +241,8 @@ class MainLoop:
                     self.config.windStrength = self.physics.wind.strength
                     self.config.temperatur = self.physics.temperatur
                     self.config.saveValues()
-
+                case 'x':
+                    exit(0)
             
 
 
