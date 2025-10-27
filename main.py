@@ -51,7 +51,7 @@ class Particle:
 
     def __init__(self, x:float, y:float, symbol:str, type:particleType, temperatur:int):
         self.x = x
-        self.y = 0.0
+        self.y = y
         self.velocityX = 0.0
         self.windresistance = random.uniform(0.8, 1.2)
         self.velocityY = 0.0
@@ -77,7 +77,7 @@ class Physics:
     def applyWind(self, symbol:Particle):
             windVariation = random.uniform(-self.wind.variation, self.wind.variation) 
             current_wind_strength = self.wind.strength + windVariation
-            
+                
             symbol.velocityX += current_wind_strength * symbol.windresistance
     
     def applyGravitation(self, symbol:Particle):
@@ -93,7 +93,7 @@ class Physics:
         symbol.temperatur += self.temperatur
         if symbol.temperatur <=0:
             symbol.symbol ='❉'
-            symbol.windresistance = random.uniform(1.6 ,3.2)
+            symbol.windresistance = random.uniform(1.3 ,2.6)
             symbol.particleType = particleType.Snow
         elif symbol.temperatur > 0:
             symbol.symbol=random.choices(['|', '¦','╿'], [5,5,1])[0]
