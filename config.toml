@@ -3,11 +3,11 @@ fps = 60
 thundertimer = 0
 raindropCount = 13
 maxSpeed = 0.5
-
+maxParticles = 1400
 
 [Physics]
 gravitation = 0.1
-temperatur = 3
+temperatur = 0
 
 [Wind]
 strength = 0.0

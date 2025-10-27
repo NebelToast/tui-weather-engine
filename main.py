@@ -15,6 +15,7 @@ class Config:
         Values = toml.load(self.configFile)
         self.fps = Values["MainLoop"]["fps"]
         self.maxSpeed = Values["MainLoop"]["maxSpeed"]
+        self.maxParticles = Values["MainLoop"]["maxParticles"]
         self.thundertimer = Values["MainLoop"]["thundertimer"]
         self.raindropCount = Values["MainLoop"]["raindropCount"]
         self.windStrength = Values["Wind"]["strength"]
@@ -34,6 +35,7 @@ class Config:
                 "thundertimer": self.thundertimer,
                 "raindropCount": self.raindropCount,
                 "maxSpeed": self.maxSpeed,
+                "maxParticles": self.maxParticles,
             },
             "Physics": {
                 "gravitation": self.gravitation,
@@ -123,6 +125,7 @@ class MainLoop:
         curses.curs_set(0)
         stdscr.nodelay(True)
         self.fps = self.config.fps
+        self.maxParticles = self.config.maxParticles
         self.symbolList = []
         curses.start_color()
         curses.use_default_colors()
@@ -150,13 +153,14 @@ class MainLoop:
     
     def spawnDrops(self,):
         for i in range(self.raindropCount):
-            x = random.randint(0, self.width - 1)
-            char = random.choices(['|', '¦','╿'], [5,5,1])[0]
-            symbol = Particle(x, 0, char, particleType.Rain, 10)
-            
-            symbol.velocityY = random.uniform(0.05, 0.15)
-            self.symbolList.append(symbol)
-    
+            if len(self.symbolList) < self.maxParticles:
+                x = random.randint(0, self.width - 1)
+                char = random.choices(['|', '¦','╿'], [5,5,1])[0]
+                symbol = Particle(x, 0, char, particleType.Rain, 10)
+                
+                symbol.velocityY = random.uniform(0.05, 0.15)
+                self.symbolList.append(symbol)
+        
 
     def thunderclear(self):
          if self.thundertimer >0:
@@ -251,6 +255,7 @@ class MainLoop:
                     self.config.gravitation = self.physics.gravitation
                     self.config.windStrength = self.physics.wind.strength
                     self.config.temperatur = self.physics.temperatur
+                    self.config.maxSpeed = self.physics.maxSpeed
                     self.config.saveValues()
                 case 'x':
                     exit(0)
