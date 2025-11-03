@@ -12,12 +12,12 @@
     {
       devShells.${system}.default = pkgs.mkShell {
         packages = [
-          # The ncurses system library
           pkgs.ncurses
+          pkgs.ruff
 
-          # Python env with the 'toml' package
           (pkgs.python311.withPackages (python-pkgs: with python-pkgs; [
             toml
+            
           ]))
         ];
 
