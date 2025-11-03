@@ -1,0 +1,21 @@
+______________________________________________
+|                                              |
+| Keybinds:                                    |
+|                                              |
+| Increase Gravity: +                          |
+| Decrease Gravity: -                          |
+|                                              |
+| Increase Wind:    e                          |
+| Decrease Wind:    q                          |
+|                                              |
+| Increase Temp:    a                          |
+| Decrease Temp:    d                          |
+|                                              |
+| Increase Speed:   f                          |
+| Decrease Speed:   g                          |
+|                                              |
+| Reload Config:    r                          |
+| Save to Config:   s                          |
+|                                              |
+| Display Keybinds: h                          |
+|______________________________________________|
