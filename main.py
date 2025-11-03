@@ -33,6 +33,7 @@ class Config:
         self.decreasMaxSpeed = Values["Keybinds"]["decreasMaxSpeed"]
         self.reload = Values["Keybinds"]["reload"]
         self.saveToConfig = Values["Keybinds"]["saveToConfig"]
+        self.displayKeybinds = Values["Keybinds"]["displayKeybinds"]
 
 
 
@@ -155,6 +156,7 @@ class MainLoop:
         self.thundertimer = 0
         self.raindropCount = int(self.config.raindropCount)
         self.debugstring = f" "
+        self.keybindsVisible = False
 
     def inbound(self):
         new_symbol_list = []
@@ -288,6 +290,8 @@ class MainLoop:
                     self.config.temperatur = self.physics.temperatur
                     self.config.maxSpeed = self.physics.maxSpeed
                     self.config.saveValues()
+                case self.config.displayKeybinds:
+                    self.keybindsVisible = not self.keybindsVisible
                 case 'x':
                     exit(0)
             
@@ -297,6 +301,9 @@ class MainLoop:
         self.special("Cloud.txt",45,-1,False)
         self.special("Cloud.txt",80,-2,False)
         self.special("Cloud.txt",120,-4,False)
+
+    def keybinds_overlay(self):
+        self.special("keybinds.txt", self.width // 2 - 25, self.height // 2 - 9, False)
 
     def loop(self):
         while(True):
@@ -319,6 +326,8 @@ class MainLoop:
             self.draw()
             if self.config.clouds:
                 self.clouds()
+            if self.keybindsVisible:
+                self.keybinds_overlay()
             self.stdscr.refresh()
             curses.delay_output(int(max(0, (1 / self.fps) - (time.time() - t)) * 1000))
             self.debugstring = f"{str(round(1/(time.time()- t)))} frametime: {str(round(time.time()- t, 3))} wind: {str(round(self.physics.wind.strength, 1))} gravitation: {str(round(self.physics.gravitation, 2))} Symbole: {len(self.symbolList)} Temperatur: {self.physics.temperatur} MaxSpeed: {round(self.physics.maxSpeed, 3)}"
