@@ -3,8 +3,9 @@ fps = 60
 thundertimer = 0
 raindropCount = 13
 maxSpeed = 0.5
-maxParticles = 1400
-clouds = false
+maxParticles = 1200
+clouds = true
+debug = true
 
 [Physics]
 gravitation = 0.1
@@ -13,3 +14,15 @@ temperatur = 0
 [Wind]
 strength = 0.0
 variation = 0.03
+
+[Keybinds]
+increasGravity = '+'
+decreasGravity = '-'
+increasWind = 'e'
+decreasWind = 'q'
+increasTemperatur = 'a'
+decreasTemperatur = 'd'
+increasMaxSpeed = 'f'
+decreasMaxSpeed = 'g'
+reload = 'r'
+saveToConfig = 's'

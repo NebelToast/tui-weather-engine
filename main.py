@@ -3,7 +3,6 @@ import random
 from enum import Enum
 import curses
 import toml
-import os
 
 particleType = Enum("symbolType", ["Lightning", "Rain", "Snow", "Overlay"])
 
@@ -24,6 +23,18 @@ class Config:
         self.clouds = Values["MainLoop"]["clouds"]
         self.gravitation = Values["Physics"]["gravitation"]
         self.temperatur = Values["Physics"]["temperatur"]
+        self.increaseGravity = Values["Keybinds"]["increasGravity"]
+        self.increaseWind = Values["Keybinds"]["increasWind"]
+        self.increaseTemperatur = Values["Keybinds"]["increasTemperatur"]
+        self.increaseMaxSpeed = Values["Keybinds"]["increasMaxSpeed"]
+        self.decreaseGravity = Values["Keybinds"]["decreasGravity"]
+        self.decreasWind = Values["Keybinds"]["decreasWind"]
+        self.decreasTemperatur = Values["Keybinds"]["decreasTemperatur"]
+        self.decreasMaxSpeed = Values["Keybinds"]["decreasMaxSpeed"]
+        self.reload = Values["Keybinds"]["reload"]
+        self.saveToConfig = Values["Keybinds"]["saveToConfig"]
+
+
 
 
         
@@ -84,7 +95,7 @@ class Physics:
             windVariation = random.uniform(-self.wind.variation, self.wind.variation) 
             current_wind_strength = self.wind.strength + windVariation
                 
-            symbol.velocityX += current_wind_strength * symbol.windresistance
+            symbol.velocityX += (current_wind_strength * symbol.windresistance)
     
     def applyGravitation(self, symbol:Particle):
         if(symbol.particleType != particleType.Lightning and symbol.particleType != particleType.Overlay):
@@ -184,17 +195,17 @@ class MainLoop:
                     curses.init_pair(2, curses.COLOR_WHITE,  -1)  
                     curses.init_pair(3, curses.COLOR_YELLOW, -1)
                     
-    def parse_art_file(self,filepath: str) -> list:
+    def parse_art_file(self,filepath: str, transparent: bool) -> list:
         parsed_art = []
         with open("Overlay/"+filepath, 'r') as f:
             for y_offset, line in enumerate(f):
                 for x_offset, symbol in enumerate(line.rstrip('\n')):
-                            #if symbol != ' ' and symbol != '⠀':
-                        parsed_art.append((x_offset, y_offset, symbol))
+                        if symbol != ' ' and symbol != '⠀' or not transparent:
+                         parsed_art.append((x_offset, y_offset, symbol))
 
         return parsed_art
-    def special(self, fileName, y, x):
-        piece = self.parse_art_file(fileName)
+    def special(self, fileName, y:int, x:int, transparent: bool):
+        piece = self.parse_art_file(fileName,transparent)
         for elements in piece:
             try:
                 final_y = elements[1] + x 
@@ -206,7 +217,7 @@ class MainLoop:
 
     def draw(self):
             self.stdscr.erase()
-            if self.debug == True:
+            if self.debug:
                 self.debugstring.join("test")
                 self.stdscr.addstr(self.height-1, 0, self.debugstring[:self.width-1], curses.A_REVERSE)
             for s in self.symbolList:
@@ -252,26 +263,26 @@ class MainLoop:
                         self.symbolList.append(Particle(random.randint(x-2,x+2 ),y, random.choice(symbols), particleType.Lightning, 10))
                         
                         y+=1
-                case '+':
+                case self.config.increaseGravity:
                     self.physics.gravitation += 0.01
-                case '-':
+                case self.config.decreaseGravity:
                     self.physics.gravitation -= 0.01
-                case 'e':
+                case self.config.increaseWind:
                     self.physics.wind.strength += 0.0025
-                case 'q':
+                case self.config.decreasWind:
                     self.physics.wind.strength -= 0.0025
-                case 'a':
+                case self.config.increaseTemperatur:
                     self.physics.temperatur +=1
-                case'd':
+                case self.config.decreasTemperatur:
                     self.physics.temperatur -=1
-                case 'f':
+                case self.config.increaseMaxSpeed:
                     self.physics.maxSpeed +=0.1
-                case'g':
+                case self.config.decreasMaxSpeed:
                     self.physics.maxSpeed -=0.1
-                case 'r':
+                case self.config.reload:
                     self.physics.gravitation = self.config.gravitation
                     self.physics.wind.strength = self.config.windStrength
-                case 's':
+                case self.config.saveToConfig:
                     self.config.gravitation = self.physics.gravitation
                     self.config.windStrength = self.physics.wind.strength
                     self.config.temperatur = self.physics.temperatur
@@ -281,11 +292,11 @@ class MainLoop:
                     exit(0)
             
     def clouds(self):
-        self.special("Cloud.txt",self.width-18,-2)
-        self.special("Cloud.txt",10,-3)
-        self.special("Cloud.txt",45,-1)
-        self.special("Cloud.txt",80,-2)
-        self.special("Cloud.txt",120,-4)
+        self.special("Cloud.txt",self.width-18,-2, False)
+        self.special("Cloud.txt",10,-3,False)
+        self.special("Cloud.txt",45,-1,False)
+        self.special("Cloud.txt",80,-2,False)
+        self.special("Cloud.txt",120,-4,False)
 
     def loop(self):
         while(True):
