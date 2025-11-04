@@ -1,6 +1,7 @@
 # tui-weather-engine
 
-
+https://youtu.be/DO26FQNGsP4
+[![Watch the video](https://img.youtube.com/vi/DO26FQNGsP4/0.jpg)](https://www.youtube.com/watch?v=DO26FQNGsP4)
 
 A simple Python script that displays beautiful, aesthetic weather simulations right in your terminal. This project focuses more on creating a visually pleasing experience than on an accurate meteorological depiction.
 
